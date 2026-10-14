@@ -1,0 +1,141 @@
+<div class="min-h-screen bg-[#090d16] text-slate-100 flex flex-col selection:bg-orange-500/30 selection:text-orange-200">
+
+  <!-- Header / Barra de Navegação Superior (Dark Mode) -->
+  <header class="bg-[#0f172a]/95 border-b border-slate-800/80 sticky top-0 z-30 shadow-md backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3 sm:gap-4">
+      
+      <!-- Marca Cifra Trans -->
+      <div class="flex items-center gap-2.5 sm:gap-3 cursor-pointer group shrink-0" (click)="openViewer()">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-[#FF5722] to-[#FF8A65] flex items-center justify-center text-white font-black text-lg sm:text-xl shadow-lg shadow-orange-500/20 group-hover:scale-105 transition-transform">
+          ♫
+        </div>
+        <div>
+          <span class="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-1">
+            Cifra <span class="text-[#FF6D3B]">Trans</span>
+          </span>
+          <span class="hidden sm:block text-[10px] uppercase font-bold tracking-widest text-slate-400 -mt-1">
+            Cifras & Tablaturas Sincronizadas
+          </span>
+        </div>
+      </div>
+
+      <!-- Seletor de Músicas no Banco de Dados (Desktop) -->
+      <div class="flex-1 max-w-xs sm:max-w-md hidden md:block">
+        <div class="relative">
+          <select 
+            [ngModel]="selectedSongId"
+            (ngModelChange)="onSongChange($event)"
+            class="w-full bg-slate-800/90 hover:bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#FF6D3B] transition-all cursor-pointer">
+            <option [value]="null" disabled class="bg-slate-900 text-slate-400">Selecione uma música do catálogo...</option>
+            @for (song of (songService.songsList$ | async); track song.id) {
+              <option [value]="song.id" class="bg-slate-900 text-slate-100">
+                {{ song.title }} - {{ song.artist }} (Tom: {{ song.originalKey }})
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Abas de Navegação / Ações -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button 
+          type="button" 
+          (click)="openViewer()"
+          [ngClass]="activeTab === 'viewer' ? 'bg-orange-500/15 text-[#FF6D3B] font-bold border-orange-500/40' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800 font-semibold border-transparent'"
+          class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm border transition-all cursor-pointer">
+          Visualizador
+        </button>
+
+        <button 
+          type="button" 
+          (click)="openCreateStudio()"
+          [ngClass]="activeTab === 'studio' && !songToEdit ? 'bg-[#FF6D3B] text-white shadow-lg shadow-orange-500/30 font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold'"
+          class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer active:scale-95">
+          <span class="font-bold">+</span>
+          <span class="hidden sm:inline">Criar Cifra</span>
+          <span class="inline sm:hidden">Cifra</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+    
+    <!-- Visualização 1: Visualizador de Cifras e Ferramentas -->
+    @if (activeTab === 'viewer') {
+      
+      <!-- Seletor de Músicas no Mobile (Otimizado para Galaxy S23 e smartphones) -->
+      <div class="block md:hidden mb-3.5 bg-[#0f172a] border border-slate-800 rounded-2xl p-3 shadow-md">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-[#FF6D3B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+            Música do Catálogo
+          </span>
+          <span class="text-[10px] text-[#FF6D3B] font-bold">Trocar Cifra</span>
+        </div>
+        <select 
+          [ngModel]="selectedSongId"
+          (ngModelChange)="onSongChange($event)"
+          class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#FF6D3B]">
+          @for (song of (songService.songsList$ | async); track song.id) {
+            <option [value]="song.id" class="bg-slate-900 text-slate-100">
+              {{ song.title }} - {{ song.artist }} ({{ song.originalKey }})
+            </option>
+          }
+        </select>
+      </div>
+
+      <!-- Barra de Ferramentas (Toolbox) -->
+      <app-toolbox></app-toolbox>
+
+      <!-- Layout em Grade: Cifra à Esquerda, Dicionário à Direita -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
+        
+        <!-- Área Principal de Cifras e Tablaturas (8 colunas) -->
+        <div class="lg:col-span-8 space-y-6">
+          <app-lyrics-viewer (editSong)="openEditStudio()"></app-lyrics-viewer>
+        </div>
+
+        <!-- Barra Lateral de Diagramas de Acordes (4 colunas) -->
+        <div class="lg:col-span-4 sticky top-20 sm:top-24 space-y-6">
+          <app-chord-dictionary></app-chord-dictionary>
+        </div>
+
+      </div>
+
+    }
+
+    <!-- Visualização 2: Estúdio de Criação / Edição de Cifras -->
+    @if (activeTab === 'studio') {
+      <div class="max-w-4xl mx-auto">
+        <app-studio 
+          [editSong]="songToEdit" 
+          [editTrack]="trackToEdit" 
+          (saved)="onStudioSaved()" 
+          (cancel)="openViewer()"></app-studio>
+      </div>
+    }
+
+  </main>
+
+  <!-- Rodapé (Dark Mode) -->
+  <footer class="bg-[#0f172a] border-t border-slate-800/80 py-5 sm:py-6 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-1.5 font-bold text-slate-300">
+        <span>Cifra Trans</span>
+        <span class="text-slate-600">•</span>
+        <span class="text-slate-400 font-normal">Modo Escuro Padrão • Plataforma Interativa</span>
+      </div>
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <span class="px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 border border-slate-700/80 font-medium">Angular 22 Standalone</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 border border-slate-700/80 font-medium">.NET 10 Minimal APIs</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 border border-slate-700/80 font-medium">PostgreSQL</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
