@@ -32,11 +32,12 @@ public static class SongEndpoints
 
     private static RouteGroupBuilder MapRoutes(RouteGroupBuilder group)
     {
-        // GET /api/songs - Listar todas as músicas com resumo
-        group.MapGet("/", async (AppDbContext db) =>
+        // GET /api/songs - Listar músicas públicas + músicas privadas do próprio usuário logado
+        group.MapGet("/", async (string? userId, AppDbContext db) =>
         {
             var songs = await db.Songs
                 .AsNoTracking()
+                .Where(s => s.IsPublic || (!string.IsNullOrEmpty(userId) && s.CreatorUserId == userId))
                 .Select(s => new
                 {
                     s.Id,
@@ -44,6 +45,9 @@ public static class SongEndpoints
                     s.Artist,
                     s.OriginalKey,
                     s.Bpm,
+                    s.IsPublic,
+                    s.CreatorUserId,
+                    s.CreatorName,
                     s.CreatedAt,
                     AvailableInstruments = s.Tracks.Select(t => t.Instrument).ToList(),
                     TracksCount = s.Tracks.Count
@@ -71,9 +75,17 @@ public static class SongEndpoints
             return Results.Ok(song);
         });
 
-        // POST /api/songs - Criar nova música com tracks e acordes opcionais
-        group.MapPost("/", async (CreateSongDto dto, AppDbContext db) =>
+        // POST /api/songs - Criar nova música (Exige usuário logado)
+        group.MapPost("/", async (CreateSongDto dto, HttpRequest request, AppDbContext db) =>
         {
+            var authHeader = request.Headers.Authorization.ToString();
+            if (string.IsNullOrWhiteSpace(authHeader) && string.IsNullOrWhiteSpace(dto.CreatorUserId))
+            {
+                return Results.Json(
+                    new { message = "Você precisa estar logado no sistema para criar uma cifra ou página de notas." },
+                    statusCode: StatusCodes.Status401Unauthorized);
+            }
+
             if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Artist))
             {
                 return Results.BadRequest(new { message = "Título e Artista são obrigatórios." });
@@ -85,6 +97,9 @@ public static class SongEndpoints
                 Artist = dto.Artist.Trim(),
                 OriginalKey = string.IsNullOrWhiteSpace(dto.OriginalKey) ? "C" : dto.OriginalKey.Trim(),
                 Bpm = dto.Bpm,
+                IsPublic = dto.IsPublic,
+                CreatorUserId = dto.CreatorUserId,
+                CreatorName = dto.CreatorName,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -124,9 +139,62 @@ public static class SongEndpoints
             return Results.Created($"/api/songs/{song.Id}", song);
         });
 
-        // POST /api/songs/{id:int}/tracks - Adicionar nova tablatura/faixa de instrumento a uma música
-        group.MapPost("/{id:int}/tracks", async (int id, CreateTrackDto trackDto, AppDbContext db) =>
+        // PATCH /api/songs/{id:int}/visibility - Alternar visibilidade Pública/Privada da Cifra (Valida Autoria)
+        group.MapPatch("/{id:int}/visibility", async (int id, UpdateSongVisibilityDto dto, HttpRequest request, AppDbContext db) =>
         {
+            var authHeader = request.Headers.Authorization.ToString();
+            if (string.IsNullOrWhiteSpace(authHeader) && string.IsNullOrWhiteSpace(dto.CreatorUserId))
+            {
+                return Results.Json(
+                    new { message = "Faça login para alterar a visibilidade desta cifra." },
+                    statusCode: StatusCodes.Status401Unauthorized);
+            }
+
+            var song = await db.Songs.FindAsync(id);
+            if (song is null)
+            {
+                return Results.NotFound(new { message = $"Música com ID {id} não encontrada." });
+            }
+
+            var (requesterUserId, isAdmin) = ExtractRequesterIdentity(authHeader, dto.CreatorUserId);
+            if (!isAdmin &&
+                !string.IsNullOrWhiteSpace(song.CreatorUserId) &&
+                !string.IsNullOrWhiteSpace(requesterUserId) &&
+                !string.Equals(song.CreatorUserId, requesterUserId, StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.Json(
+                    new { message = "Apenas o autor da cifra ou um administrador pode alterar sua visibilidade." },
+                    statusCode: StatusCodes.Status403Forbidden);
+            }
+
+            if (string.IsNullOrWhiteSpace(song.CreatorUserId) && !string.IsNullOrWhiteSpace(requesterUserId))
+            {
+                song.CreatorUserId = requesterUserId;
+            }
+
+            song.IsPublic = dto.IsPublic;
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new
+            {
+                song.Id,
+                song.IsPublic,
+                song.CreatorUserId,
+                song.CreatorName
+            });
+        });
+
+        // POST /api/songs/{id:int}/tracks - Adicionar nova tablatura/faixa de instrumento (Exige usuário logado)
+        group.MapPost("/{id:int}/tracks", async (int id, CreateTrackDto trackDto, HttpRequest request, AppDbContext db) =>
+        {
+            var authHeader = request.Headers.Authorization.ToString();
+            if (string.IsNullOrWhiteSpace(authHeader))
+            {
+                return Results.Json(
+                    new { message = "Você precisa estar logado para adicionar faixas." },
+                    statusCode: StatusCodes.Status401Unauthorized);
+            }
+
             var song = await db.Songs.FindAsync(id);
             if (song is null)
             {
@@ -155,9 +223,17 @@ public static class SongEndpoints
             return Results.Created($"/api/songs/{id}/tracks/{track.Id}", track);
         });
 
-        // PUT /api/songs/{id:int} - Atualizar música existente e suas faixas
-        group.MapPut("/{id:int}", async (int id, CreateSongDto dto, AppDbContext db) =>
+        // PUT /api/songs/{id:int} - Atualizar música existente e suas faixas (Exige usuário logado)
+        group.MapPut("/{id:int}", async (int id, CreateSongDto dto, HttpRequest request, AppDbContext db) =>
         {
+            var authHeader = request.Headers.Authorization.ToString();
+            if (string.IsNullOrWhiteSpace(authHeader) && string.IsNullOrWhiteSpace(dto.CreatorUserId))
+            {
+                return Results.Json(
+                    new { message = "Você precisa estar logado para editar cifras." },
+                    statusCode: StatusCodes.Status401Unauthorized);
+            }
+
             var song = await db.Songs
                 .Include(s => s.Tracks)
                 .Include(s => s.Chords)
@@ -166,6 +242,17 @@ public static class SongEndpoints
             if (song is null)
             {
                 return Results.NotFound(new { message = $"Música com ID {id} não encontrada." });
+            }
+
+            var (requesterUserId, isAdmin) = ExtractRequesterIdentity(authHeader, dto.CreatorUserId);
+            if (!isAdmin &&
+                !string.IsNullOrWhiteSpace(song.CreatorUserId) &&
+                !string.IsNullOrWhiteSpace(requesterUserId) &&
+                !string.Equals(song.CreatorUserId, requesterUserId, StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.Json(
+                    new { message = "Apenas o autor da cifra ou um administrador pode editar este conteúdo." },
+                    statusCode: StatusCodes.Status403Forbidden);
             }
 
             if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Artist))
@@ -177,6 +264,12 @@ public static class SongEndpoints
             song.Artist = dto.Artist.Trim();
             song.OriginalKey = string.IsNullOrWhiteSpace(dto.OriginalKey) ? "C" : dto.OriginalKey.Trim();
             song.Bpm = dto.Bpm;
+            song.IsPublic = dto.IsPublic;
+            if (!string.IsNullOrWhiteSpace(dto.CreatorUserId) && string.IsNullOrWhiteSpace(song.CreatorUserId))
+            {
+                song.CreatorUserId = dto.CreatorUserId;
+                song.CreatorName = dto.CreatorName;
+            }
 
             if (dto.Tracks is not null && dto.Tracks.Count > 0)
             {
@@ -226,6 +319,8 @@ public static class SongEndpoints
                 Artist = "Legião Urbana",
                 OriginalKey = "C",
                 Bpm = 126,
+                IsPublic = true,
+                CreatorName = "Cifra Trans Oficial",
                 CreatedAt = DateTime.UtcNow,
                 Tracks = new List<InstrumentTrack>
                 {
@@ -283,5 +378,32 @@ E|---------------------------------------|
         });
 
         return group;
+    }
+
+    private static (string? UserId, bool IsAdmin) ExtractRequesterIdentity(string? authHeader, string? dtoUserId)
+    {
+        bool isAdmin = false;
+        string? tokenUserId = null;
+
+        if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            var token = authHeader.Substring("Bearer ".Length).Trim();
+            if (token.StartsWith("basic-docs-", StringComparison.OrdinalIgnoreCase))
+            {
+                isAdmin = true;
+            }
+            else if (token.StartsWith("active-", StringComparison.OrdinalIgnoreCase))
+            {
+                // Formato: active-{userId}-{guid32}
+                var withoutPrefix = token.Substring("active-".Length);
+                var lastDash = withoutPrefix.LastIndexOf('-');
+                if (lastDash > 0)
+                {
+                    tokenUserId = withoutPrefix.Substring(0, lastDash);
+                }
+            }
+        }
+
+        return (!string.IsNullOrWhiteSpace(dtoUserId) ? dtoUserId.Trim() : tokenUserId, isAdmin);
     }
 }

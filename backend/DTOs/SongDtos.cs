@@ -5,9 +5,14 @@ public record CreateSongDto(
     string Artist,
     string OriginalKey = "C",
     int? Bpm = null,
+    bool IsPublic = true,
+    string? CreatorUserId = null,
+    string? CreatorName = null,
     List<CreateTrackDto>? Tracks = null,
     List<CreateChordDto>? Chords = null
 );
+
+public record UpdateSongVisibilityDto(bool IsPublic, string? CreatorUserId = null);
 
 public record CreateTrackDto(
     string Instrument,

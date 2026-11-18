@@ -24,6 +24,9 @@ export interface Song {
   artist: string;
   originalKey: string;
   bpm?: number;
+  isPublic?: boolean;
+  creatorUserId?: string | null;
+  creatorName?: string | null;
   createdAt: string;
   tracks: InstrumentTrack[];
   chords: Chord[];
@@ -35,6 +38,9 @@ export interface SongSummary {
   artist: string;
   originalKey: string;
   bpm?: number;
+  isPublic?: boolean;
+  creatorUserId?: string | null;
+  creatorName?: string | null;
   createdAt: string;
   availableInstruments: string[];
   tracksCount: number;
@@ -60,6 +66,9 @@ export interface CreateSongPayload {
   artist: string;
   originalKey?: string;
   bpm?: number;
+  isPublic?: boolean;
+  creatorUserId?: string | null;
+  creatorName?: string | null;
   tracks?: CreateTrackPayload[];
   chords?: CreateChordPayload[];
 }

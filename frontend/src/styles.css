@@ -2,70 +2,263 @@
 
 @theme {
   --color-cifra-orange: #FF6D3B;
-  --color-cifra-dark-orange: #E64A19;
+  --color-cifra-dark-orange: #C2410C;
   --color-cifra-light-orange: #3b1d14;
   --color-cifra-chord: #4ade80;
   --color-cifra-dark: #0f172a;
 }
 
-:root {
+/* ============================================================================
+ * TOKENS DO DESIGN SYSTEM — CIFRA TRANS
+ * Tema padrão: Escuro "Modo Palco" ([data-theme="stage"])
+ * Tema alternativo: Claro ([data-theme="light"])
+ * ============================================================================ */
+:root,
+[data-theme="stage"] {
   color-scheme: dark;
+
+  /* Tipografia */
+  --ct-font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ct-font-mono: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  /* Escala de espaçamento 4/8px */
+  --ct-space-1: 4px;
+  --ct-space-2: 8px;
+  --ct-space-3: 12px;
+  --ct-space-4: 16px;
+  --ct-space-5: 20px;
+  --ct-space-6: 24px;
+  --ct-space-8: 32px;
+  --ct-space-10: 40px;
+  --ct-space-12: 48px;
+
+  /* Raios */
+  --ct-radius-sm: 6px;
+  --ct-radius-md: 10px;
+  --ct-radius-lg: 14px;
+  --ct-radius-xl: 18px;
+  --ct-radius-2xl: 24px;
+  --ct-radius-full: 9999px;
+
+  /* Z-index */
+  --ct-z-base: 1;
+  --ct-z-sticky: 20;
+  --ct-z-header: 30;
+  --ct-z-dropdown: 40;
+  --ct-z-modal: 50;
+  --ct-z-toast: 60;
+
+  /* Cores de superfície — Tema Escuro "Modo Palco" (alto contraste em ambiente escuro) */
+  --ct-bg-canvas: #070b14;
+  --ct-bg-surface: #0f172a;
+  --ct-bg-elevated: #162033;
+  --ct-bg-subtle: #1e293b;
+  --ct-bg-header: rgba(15, 23, 42, 0.96);
+  --ct-bg-overlay: rgba(2, 6, 23, 0.8);
+
+  /* Bordas */
+  --ct-border-default: #1e293b;
+  --ct-border-strong: #64748b;
+
+  /* Texto (contraste >= 4.5:1 sobre --ct-bg-surface #0f172a) */
+  --ct-text-primary: #f8fafc;
+  --ct-text-secondary: #cbd5e1;
+  --ct-text-muted: #94a3b8;
+
+  /* Acento primário (Cifra Trans Laranja AA) */
+  --ct-accent-primary: #c2410c;
+  --ct-accent-primary-hover: #ea580c;
+  --ct-accent-primary-fg: #ffffff;
+  --ct-accent-highlight: #ff8a65;
+  --ct-accent-soft-bg: rgba(255, 109, 59, 0.16);
+  --ct-accent-soft-border: rgba(255, 138, 101, 0.45);
+
+  /* Acento secundário (Reprodução / Spotify) */
+  --ct-accent-secondary: #15803d;
+  --ct-accent-secondary-hover: #16a34a;
+  --ct-accent-secondary-fg: #ffffff;
+  --ct-accent-secondary-text: #4ade80;
+
+  /* Semântica */
+  --ct-success-fg: #4ade80;
+  --ct-success-bg: rgba(22, 163, 74, 0.16);
+  --ct-success-border: rgba(74, 222, 128, 0.4);
+
+  --ct-warning-fg: #fcd34d;
+  --ct-warning-bg: rgba(217, 119, 6, 0.18);
+  --ct-warning-border: rgba(251, 191, 36, 0.45);
+
+  --ct-danger-fg: #fca5a5;
+  --ct-danger-bg: #b91c1c;
+  --ct-danger-bg-hover: #dc2626;
+  --ct-danger-soft-bg: rgba(220, 38, 38, 0.16);
+  --ct-danger-border: rgba(248, 113, 113, 0.45);
+
+  --ct-info-fg: #7dd3fc;
+  --ct-info-bg: rgba(14, 165, 233, 0.16);
+  --ct-info-border: rgba(56, 189, 248, 0.4);
+
+  /* Acordes da Cifra */
+  --ct-chord-fg: #4ade80;
+  --ct-chord-bg: rgba(5, 46, 22, 0.72);
+  --ct-chord-border: rgba(74, 222, 128, 0.35);
+  --ct-chord-active-bg: #c2410c;
+  --ct-chord-active-fg: #ffffff;
+
+  /* Sombras e Foco */
+  --ct-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --ct-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.42);
+  --ct-shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.55);
+  --ct-shadow-glow: 0 0 16px rgba(255, 109, 59, 0.32);
+  --ct-focus-ring: #fb923c;
 }
 
-html, body {
+/* ============================================================================
+ * TEMA CLARO ([data-theme="light"]) — Contraste WCAG AA
+ * ============================================================================ */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --ct-bg-canvas: #f1f5f9;
+  --ct-bg-surface: #ffffff;
+  --ct-bg-elevated: #f8fafc;
+  --ct-bg-subtle: #e2e8f0;
+  --ct-bg-header: rgba(255, 255, 255, 0.96);
+  --ct-bg-overlay: rgba(15, 23, 42, 0.55);
+
+  --ct-border-default: #cbd5e1;
+  --ct-border-strong: #64748b;
+
+  /* Texto (>= 4.5:1 sobre #ffffff e #f1f5f9) */
+  --ct-text-primary: #0f172a;
+  --ct-text-secondary: #334155;
+  --ct-text-muted: #475569;
+
+  --ct-accent-primary: #c2410c;
+  --ct-accent-primary-hover: #9a3412;
+  --ct-accent-primary-fg: #ffffff;
+  --ct-accent-highlight: #9a3412;
+  --ct-accent-soft-bg: #ffedd5;
+  --ct-accent-soft-border: #fdba74;
+
+  --ct-accent-secondary: #15803d;
+  --ct-accent-secondary-hover: #166534;
+  --ct-accent-secondary-fg: #ffffff;
+  --ct-accent-secondary-text: #15803d;
+
+  --ct-success-fg: #166534;
+  --ct-success-bg: #dcfce7;
+  --ct-success-border: #86efac;
+
+  --ct-warning-fg: #92400e;
+  --ct-warning-bg: #fef3c7;
+  --ct-warning-border: #fcd34d;
+
+  --ct-danger-fg: #991b1b;
+  --ct-danger-bg: #b91c1c;
+  --ct-danger-bg-hover: #991b1b;
+  --ct-danger-soft-bg: #fee2e2;
+  --ct-danger-border: #fca5a5;
+
+  --ct-info-fg: #075985;
+  --ct-info-bg: #e0f2fe;
+  --ct-info-border: #7dd3fc;
+
+  --ct-chord-fg: #166534;
+  --ct-chord-bg: #dcfce7;
+  --ct-chord-border: #86efac;
+  --ct-chord-active-bg: #c2410c;
+  --ct-chord-active-fg: #ffffff;
+
+  --ct-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
+  --ct-shadow-md: 0 6px 16px rgba(15, 23, 42, 0.1);
+  --ct-shadow-lg: 0 18px 36px rgba(15, 23, 42, 0.14);
+  --ct-shadow-glow: 0 0 14px rgba(194, 65, 12, 0.22);
+  --ct-focus-ring: #c2410c;
+}
+
+html,
+body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #090d16;
-  color: #f1f5f9;
+  font-family: var(--ct-font-sans);
+  background-color: var(--ct-bg-canvas);
+  color: var(--ct-text-primary);
   min-height: 100vh;
 }
 
-/* Padronização de <select> com seta única personalizada em SVG e remoção das setas nativas */
-select {
+/* Fonte monoespaçada estrita para cifras e tablaturas mantendo acordes alinhados */
+.ct-chord-sheet {
+  font-family: var(--ct-font-mono);
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+/* Foco visível acessível WCAG AA */
+.ct-focus-ring:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible,
+[role="switch"]:focus-visible {
+  outline: 2px solid var(--ct-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Padronização de <select> nativo (quando não encapsulado por ct-select) */
+select.ct-native-select {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 1rem 1rem;
-  padding-right: 2.25rem !important;
 }
 
-/* Scrollbar estilizada no modo escuro */
+/* Scrollbar adaptável ao tema */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: var(--ct-bg-surface);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--ct-border-strong);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--ct-text-muted);
 }
 
-/* Otimizações touch e interações para dispositivos móveis (ex: Galaxy S23) */
-button, select, input, textarea {
+button,
+select,
+input,
+textarea {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Scroll horizontal suave sem quebrar layout em telas pequenas */
 .scrollbar-thin::-webkit-scrollbar {
   height: 4px;
 }
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--ct-bg-elevated);
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: var(--ct-border-strong);
   border-radius: 2px;
 }
 
+/* Respeito a prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
